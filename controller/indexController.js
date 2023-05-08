@@ -1,7 +1,8 @@
 class IndexController {
     static index(req,res,next){
         res.render('index')
-    }
+        
+    } 
 
     static pageRegister(req,res,next){
         res.render('register',{
