@@ -1,6 +1,13 @@
+const Product = require('../model/product')
+
 class IndexController {
     static index(req,res,next){
-        res.render('index')
+        Product.find().then(product =>{
+            res.render('index', {product:product})
+        }).catch(err => {
+            console.log(err);
+            res.status(500).send('Error fetching items');
+        });
         
     } 
 
