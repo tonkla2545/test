@@ -82,7 +82,7 @@ class OrderController {
                 return res.status(400).json({ error: 'Product not found' });
             }
 
-            OrderModel.create({ Pname: product.name, Pprice: product.price, U_id: U_id }).then((order) => {
+            OrderModel.create({ Pname: product.name, Pprice: product.price,Pimage: product.image , U_id: U_id }).then((order) => {
                 res.status(200).json(order);
             }).catch((error) => {
                 console.error('Error inserting item:', error);

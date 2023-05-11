@@ -22,14 +22,16 @@ class Users {
         // }
 
         User.findOne({ username }).then((oldUser) => {
+            let validationError
             if (oldUser) {
-                const validationError = ["User already exists. Please login."]
+                validationError = ["User already exists. Please login."]
                 req.flash('validationError', validationError);
-                res.redirect("/login");
-                return res.status(409).send("User already exists. Please login.");
+                return res.redirect('/register');
+                // return res.status(409).send("User already exists. Please login.");
+            }else {
+                return bcrypt.hash(password, 10);
             }
-            return bcrypt.hash(password, 10);
-        }).then((hash) => {
+        }).then((hash) => {``
             return User.create({ username, password: hash });
         }).then((user) => {
             const token = jwt.sign(
@@ -38,24 +40,69 @@ class Users {
                 { expiresIn: "2h" }
             );
             user.token = token;
-            res.status(201).json(user);
+            // res.status(201).json(user);
+            res.redirect('/login');
         }).catch((err) => {
-            let validationError;
-            if (err) {
-                validationError = ["Please procide username and password"];
-                req.flash('validationError', validationError);
-                res.redirect("/register");
-            } 
+            let validationError = ["Please procide username and password"];
+            req.flash('validationError', validationError);
+            res.redirect('/register');
             console.log(err)
         });
         
     }
 
 
+    // static login(req, res, next) {
+    //     const { username, password } = req.body;
+
+    //     User.findOne({ username: username }).then((user) => {
+    //         let validationError
+    //         if (user) {
+    //             bcrypt.compare(password, user.password).then((match) => {
+    //                 if (match) {
+    //                     const token = jwt.sign(
+    //                         { user_id: user._id, username },
+    //                         process.env.TOKEN_KEY,
+    //                         { expiresIn: "2h" }
+    //                     );
+    //                     user.token = token;
+    //                     req.session.regenerate((err) => {
+    //                         if (err) {
+    //                           // Handle the error
+    //                           console.error('Failed to regenerate session:', err);
+    //                           return res.redirect('/login');
+    //                         }
+    //                         req.session.userId = user._id;
+    //                         req.session.token = user.token;
+    //                         console.log("Login successful");
+    //                         res.redirect('/home');
+    //                     });
+    //                     // res.status(200).json(user);
+    //                 } else {
+    //                     validationError = ["Password is incorrect."]
+    //                     req.flash('validationError', validationError);
+    //                     res.redirect('/login')
+    //                     // res.status(400).send("Invalid credentials");
+    //                 }
+    //             });
+    //         } else {
+    //             validationError = ["Not found Username."]
+    //             req.flash('validationError', validationError);
+    //             res.redirect('/login')
+    //             // res.status(400).send("Invalid credentials");
+    //         }
+    //     }).catch((err) => {
+    //         validationError = ["Not found Username."]
+    //         req.flash('validationError', validationError);
+    //         res.redirect('/login')
+    //     });
+    // }
+
     static login(req, res, next) {
         const { username, password } = req.body;
 
         User.findOne({ username: username }).then((user) => {
+            let validationError
             if (user) {
                 bcrypt.compare(password, user.password).then((match) => {
                     if (match) {
@@ -65,19 +112,42 @@ class Users {
                             { expiresIn: "2h" }
                         );
                         user.token = token;
-                        res.status(200).json(user);
-                        console.log("Login successful");
+                        req.session.regenerate((err) => {
+                            if (err) {
+                                console.error('Failed to regenerate session:', err);
+                                return res.redirect('/login');
+                            }
+                            req.session.userId = user._id;
+                            req.session.token = token; // Store the token in the session
+                            console.log("Login successful");
+                            res.redirect('/home');
+                        });
+                        
+                        // res.status(200).json(user);
                     } else {
-                        res.status(400).send("Invalid credentials");
+                        validationError = ["Password is incorrect."]
+                        req.flash('validationError', validationError);
+                        res.redirect('/login')
+                        // res.status(400).send("Invalid credentials");
                     }
                 });
             } else {
-                res.status(400).send("Invalid credentials");
+                validationError = ["Not found Username."]
+                req.flash('validationError', validationError);
+                res.redirect('/login')
+                // res.status(400).send("Invalid credentials");
             }
+        }).catch((err) => {
+            validationError = ["Not found Username."]
+            req.flash('validationError', validationError);
+            res.redirect('/login')
+        });
+    }
+
+    static logout(req,res,next){
+        req.session.destroy(() => {
+            res.redirect('/')
         })
-            .catch((err) => {
-                next(err);
-            });
     }
 
 

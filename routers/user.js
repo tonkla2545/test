@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const expressSession = require('express-session')
+router.use(expressSession({
+    secret: "node secret"
+}))
+
 
 const userController = require('../controller/userController')
 const auth = require('../middleware/auth')
@@ -9,9 +14,9 @@ const auth = require('../middleware/auth')
 //   res.send('respond with a resource');
 // });
 
-// router.get('/',userController.index)
+router.get('/logout',userController.logout)
 router.post('/user/register',userController.register)
-router.post('/login',userController.login)
+router.post('/user/login',userController.login)
 router.put('/editProfile/:id',userController.editProfile)
 router.put('/changePassword',userController.changePassword)
 router.delete('/deleteUser/:id',userController.deleteUser)
